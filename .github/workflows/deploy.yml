@@ -25,6 +25,11 @@ jobs:
         run: |
           cp README.md content
           jupyter lite build --contents content --output-dir dist
+      - name: Check Pages preconditions
+        env:
+          PAGES_DIST: dist
+        run: |
+          python -m unittest discover -s tests -p 'test_pages_config.py'
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
