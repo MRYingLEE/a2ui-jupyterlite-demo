@@ -1,8 +1,9 @@
-"""Check the Python notebook flow and its deployed widget assets."""
+"""Check that the Python and JavaScript smoke tests exercise the same flow."""
 
 import ast
 import asyncio
 import json
+import subprocess
 import sys
 import types
 import unittest
@@ -69,8 +70,38 @@ def python_flow(notebook_name):
     return surface.batches, namespace["action_data"]
 
 
-class PythonNotebookTest(unittest.TestCase):
-    def test_python_wheel_widget_assets_match_deployed_files(self):
+def javascript_flow():
+    notebook = json.loads((CONTENT / "a2ui-js-form-submit.ipynb").read_text())
+    code = "".join(notebook["cells"][1]["source"])
+    script = """
+const vm = require('node:vm');
+const input = JSON.parse(require('node:fs').readFileSync(0, 'utf8'));
+class Surface {
+  constructor() { this.batches = []; }
+  send(messages) { this.batches.push(Array.isArray(messages) ? messages : [messages]); }
+  onAction(handler) { this.handler = handler; }
+}
+const context = {A2UISurface: Surface, display: () => {}};
+vm.createContext(context);
+const code = input.code.replace(/^const \\{ A2UISurface \\} = await import\\([^\\n]+\\);\\n/, '');
+if (code === input.code) throw new Error('JavaScript adapter import was not found');
+vm.runInContext(code, context);
+context.surface.handler(input.action);
+console.log(JSON.stringify({batches: context.surface.batches, action: context.actionData}));
+"""
+    result = subprocess.run(
+        ["node", "-e", script],
+        input=json.dumps({"code": code, "action": ACTION}),
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    output = json.loads(result.stdout)
+    return output["batches"], output["action"]
+
+
+class NotebookParityTest(unittest.TestCase):
+    def test_python_wheel_and_javascript_assets_match(self):
         wheels = sorted((CONTENT.parent / "wheels").glob("a2ui_jupyter-*.whl"))
         self.assertEqual(len(wheels), 1, "Expected exactly one a2ui-jupyter wheel")
         with zipfile.ZipFile(wheels[0]) as wheel:
@@ -81,12 +112,18 @@ class PythonNotebookTest(unittest.TestCase):
                         (CONTENT / "a2ui" / name).read_bytes(),
                     )
 
-    def test_python_form_and_callback(self):
+    def test_python_and_javascript_form_and_callback_match(self):
         python_batches, python_action = python_flow("smoke_test.ipynb")
+        javascript_batches, javascript_action = javascript_flow()
         self.assertEqual(python_action, ACTION)
-        self.assertEqual(python_batches[-1][0]["updateDataModel"]["value"], "Submitted: Ada")
+        self.assertEqual(javascript_action, ACTION)
+        # Batch boundaries differ between the notebooks, so compare the message sequence.
+        python_messages = [message for batch in python_batches for message in batch]
+        javascript_messages = [message for batch in javascript_batches for message in batch]
+        self.assertEqual(python_messages, javascript_messages)
+        self.assertEqual(python_messages[-2]["updateDataModel"]["value"], "Submitted: Ada")
         self.assertEqual(
-            python_batches[-1][1]["updateComponents"]["components"][0]["children"],
+            python_messages[-1]["updateComponents"]["components"][0]["children"],
             ["title", "status"],
         )
 

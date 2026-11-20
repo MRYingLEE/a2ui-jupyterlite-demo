@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Check A2UI Python notebook
+      - name: Check A2UI notebook parity
         run: python -m unittest discover -s tests -p 'test_a2ui_notebooks.py'
       - name: Install Mamba and Xeus build dependencies
         uses: mamba-org/setup-micromamba@v1

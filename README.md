@@ -1,15 +1,14 @@
 # A2UI JupyterLite test site
 
-This branch builds a JupyterLite site for testing the A2UI Jupyter renderer
-with Python kernels, Pyodide and xeus-python. It is based on the
-[JupyterLite demo](https://github.com/jupyterlite/demo).
+This repository builds a JupyterLite site for testing the A2UI Jupyter
+renderer with Pyodide, xeus-python, and JavaScript kernels. It is based on
+the [JupyterLite demo](https://github.com/jupyterlite/demo).
 
 The renderer and reusable examples live in
 [`typescript/renderers/jupyter`](https://github.com/MRYingLEE/a2ui-jupyter/tree/main/typescript/renderers/jupyter)
 and [`python/a2ui_jupyter`](https://github.com/MRYingLEE/a2ui-jupyter/tree/main/python/a2ui_jupyter)
 in the A2UI source checkout. This repository owns the site configuration and
-Python-kernel smoke tests. JavaScript-kernel examples and tests are on the
-`jupyter-js-kernel` branch.
+kernel-specific smoke tests.
 
 ## Requirements
 
@@ -23,7 +22,7 @@ kernel. The xeus-python environment is defined in
 [`environment.yml`](environment.yml); building it requires `micromamba` on
 `PATH`.
 
-## A2UI Python test notebooks
+## A2UI test notebooks
 
 - [`content/smoke_test.ipynb`](content/smoke_test.ipynb) is the form test for
   every kernel. Select Python (Pyodide) or Python (XPython) before running it.
@@ -35,6 +34,11 @@ kernel. The xeus-python environment is defined in
   are copies of the examples in the
   [a2ui-jupyter package](https://github.com/MRYingLEE/a2ui-jupyter/tree/main/python/a2ui_jupyter/examples).
   They use the same setup cell as the smoke test.
+- [`content/a2ui-js-form-submit.ipynb`](content/a2ui-js-form-submit.ipynb)
+  tests the same form and callback with the JavaScript kernel. Its adapter URL
+  starts at `/files/`; adjust it to include the site base path when deploying
+  under a URL prefix.
+- [`content/javascript.ipynb`](content/javascript.ipynb) continues to exercise the JavaScript kernel.
 
 The [GitHub Pages workflow](.github/workflows/deploy.yml) builds the Pyodide
 package index from `requirements.txt` and the xeus-python runtime from
@@ -51,15 +55,15 @@ suspends the kernel and runs the next queued cell before the current cell
 finishes, which showed up as `NameError` when the setup and surface cells were
 run back to back.
 
-The wheel in [`wheels/`](wheels) and the widget files in
+The wheel in [`wheels/`](wheels) and the JavaScript files in
 [`content/a2ui/`](content/a2ui) are deployment inputs. When testing a renderer
 change, rebuild and replace both from the same A2UI revision; changing the
 source checkout alone does not update the deployed site. Restart the kernels
 and refresh the browser after rebuilding.
 
-Run the local notebook check with
-`python -m unittest discover -s tests -p 'test_a2ui_notebooks.py'`. It checks
-the Python form callback and confirms that the wheel contains the deployed
-widget files; it does not replace browser testing.
+Run the local form-parity check with
+`python -m unittest discover -s tests -p 'test_a2ui_notebooks.py'`. It compares
+the messages and callback results in both notebooks; it does not replace the
+browser tests for each kernel.
 
 
