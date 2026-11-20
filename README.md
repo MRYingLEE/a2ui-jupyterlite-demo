@@ -29,9 +29,8 @@ environment.
   environment is built with the package already installed. The form callback
   replaces the form with a confirmation and stores the action for inspection
   in the last cell.
-- [`content/a2ui-test-xeus.ipynb`](content/a2ui-test-xeus.ipynb) and
-  [`content/manual_smoke_test.ipynb`](content/manual_smoke_test.ipynb) point
-  to the shared Python test for existing links.
+- [`content/a2ui-test-xeus.ipynb`](content/a2ui-test-xeus.ipynb) points to the
+  shared Python test for existing links.
 
 The [GitHub Pages workflow](.github/workflows/deploy.yml) builds the Pyodide
 package index from `requirements.txt` and the xeus-python runtime from
