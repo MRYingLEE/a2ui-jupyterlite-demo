@@ -42,5 +42,4 @@ ipyleaflet
 # Python: plotting libraries (optional)
 plotly>=6,<7
 bqplot
-anywidget
-./wheels/a2ui_jupyter-0.1.1.dev1899-py3-none-any.whl
+anywidget>=0.11,<0.12

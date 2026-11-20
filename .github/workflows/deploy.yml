@@ -14,17 +14,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Check A2UI Python notebook
+        run: python -m unittest discover -s tests -p 'test_a2ui_notebooks.py'
+      - name: Install Mamba and Xeus build dependencies
+        uses: mamba-org/setup-micromamba@v1
         with:
-          python-version: '3.11'
-      - name: Install the dependencies
+          micromamba-version: '1.5.8-0'
+          environment-file: .github/build-environment.yml
+          cache-environment: true
+      - name: Build the JupyterLite site
+        shell: bash -l {0}
         run: |
           python -m pip install -r requirements.txt
-      - name: Build the JupyterLite site
-        run: |
-          cp README.md content
-          jupyter lite build --contents content --output-dir dist
+          mkdir -p build/runtime-wheels/rpds-py
+          python -m zipfile -e wheels/rpds_py-0.30.0-cp313-cp313-emscripten_4_0_9_wasm32.whl build/runtime-wheels/rpds-py
+          jupyter lite build --contents content --output-dir dist --piplite-wheels wheels \
+            --XeusAddon.mounts=wheels:/wheels \
+            --XeusAddon.mounts=build/runtime-wheels/rpds-py/rpds:/lib/python3.13/site-packages/rpds \
+            --XeusAddon.mounts=build/runtime-wheels/rpds-py/rpds_py-0.30.0.dist-info:/lib/python3.13/site-packages/rpds_py-0.30.0.dist-info
       - name: Check Pages preconditions
         env:
           PAGES_DIST: dist

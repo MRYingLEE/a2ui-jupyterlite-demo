@@ -1,0 +1,26 @@
+name: xeus-kernel
+channels:
+  - https://repo.prefix.dev/emscripten-forge-4x
+  - https://repo.prefix.dev/conda-forge
+dependencies:
+  - emscripten-abi=4.0.9
+  - python=3.13
+  - xeus-python
+  - ipycanvas
+  - numpy
+  - pydantic-core=2.41.5
+  - psygnal
+  - regex
+  - pip:
+      - ./wheels/a2ui_jupyter-0.1.1.dev1947-py3-none-any.whl
+      - a2ui-core==0.6.0
+      - annotated-types>=0.6.0
+      - anywidget>=0.11.0
+      - attrs>=22.2.0
+      - babel>=2.14.0
+      - jupyter-ui-poll>=1.0.0
+      - jsonschema>=4.26.0
+      - jsonschema-specifications>=2023.3.6
+      - pydantic==2.12.5
+      - referencing>=0.37.0
+      - typing-inspection>=0.4.2
