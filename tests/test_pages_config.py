@@ -35,6 +35,18 @@ class PagesPreconditionTest(unittest.TestCase):
         config = load_config(ROOT / "jupyter-lite.json")
         self.assertEqual(config.get("exposeAppInBrowser"), "true")
 
+    def test_source_config_keeps_default_base_url(self):
+        config = load_config(ROOT / "jupyter-lite.json")
+        self.assertNotIn("baseUrl", config)
+
+    def test_workflow_preloads_rpds_in_xeus_kernel(self):
+        workflow = (ROOT / ".github" / "workflows" / "deploy.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("startup/a2ui_preload.pth:", workflow)
+        pth = (ROOT / "startup" / "a2ui_preload.pth").read_text(encoding="utf-8")
+        self.assertEqual(pth.strip(), "import rpds")
+
     def test_requirements_pin_tested_versions(self):
         pins = requirement_pins((ROOT / "requirements.txt").read_text(encoding="utf-8"))
         for name, version in TESTED_PINS.items():

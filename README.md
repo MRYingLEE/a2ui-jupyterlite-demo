@@ -40,9 +40,16 @@ The [GitHub Pages workflow](.github/workflows/deploy.yml) builds the Pyodide
 package index from `requirements.txt` and the xeus-python runtime from
 [`environment.yml`](environment.yml). [jupyter-lite.json](jupyter-lite.json)
 pins Pyodide to 0.29.3 to match the local `rpds-py` wheel. The workflow deploys
-pushes to `main`; other branches run the build without deploying. When serving locally,
-pass `--base-url=../` to `jupyter lite serve` for the `/lab/` and `/notebooks/`
-routes.
+pushes to `main`; other branches run the build without deploying. Do not set
+`baseUrl` in [jupyter-lite.json](jupyter-lite.json): the root page compares it
+with its own path to redirect to `/lab/`, and an override such as `../` breaks
+that redirect.
+
+The xeus-python build mounts [`startup/a2ui_preload.pth`](startup/a2ui_preload.pth)
+so the kernel imports the mounted `rpds` module at startup. Importing it later
+suspends the kernel and runs the next queued cell before the current cell
+finishes, which showed up as `NameError` when the setup and surface cells were
+run back to back.
 
 The wheel in [`wheels/`](wheels) and the widget files in
 [`content/a2ui/`](content/a2ui) are deployment inputs. When testing a renderer

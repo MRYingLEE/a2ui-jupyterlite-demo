@@ -32,7 +32,8 @@ jobs:
             --PyodideAddon.pyodide_url=https://github.com/pyodide/pyodide/releases/download/0.29.3/pyodide-0.29.3.tar.bz2 \
             --XeusAddon.mounts=wheels:/wheels \
             --XeusAddon.mounts=build/runtime-wheels/rpds-py/rpds:/lib/python3.13/site-packages/rpds \
-            --XeusAddon.mounts=build/runtime-wheels/rpds-py/rpds_py-0.30.0.dist-info:/lib/python3.13/site-packages/rpds_py-0.30.0.dist-info
+            --XeusAddon.mounts=build/runtime-wheels/rpds-py/rpds_py-0.30.0.dist-info:/lib/python3.13/site-packages/rpds_py-0.30.0.dist-info \
+            --XeusAddon.mounts=startup/a2ui_preload.pth:/lib/python3.13/site-packages
       - name: Check Pages preconditions
         env:
           PAGES_DIST: dist
