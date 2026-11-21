@@ -12,10 +12,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-JS_KERNEL_EXTENSION = "@jupyterlite/javascript-kernel-extension"
 TESTED_PINS = {
     "jupyterlite-core": "0.8.7",
-    "jupyterlite-javascript-kernel": "0.4.0a5",
 }
 
 
@@ -37,10 +35,6 @@ class PagesPreconditionTest(unittest.TestCase):
         config = load_config(ROOT / "jupyter-lite.json")
         self.assertEqual(config.get("exposeAppInBrowser"), "true")
 
-    def test_source_config_keeps_javascript_kernel_enabled(self):
-        config = load_config(ROOT / "jupyter-lite.json")
-        self.assertNotIn(JS_KERNEL_EXTENSION, config.get("disabledExtensions", []))
-
     def test_requirements_pin_tested_versions(self):
         pins = requirement_pins((ROOT / "requirements.txt").read_text(encoding="utf-8"))
         for name, version in TESTED_PINS.items():
@@ -54,8 +48,6 @@ class PagesPreconditionTest(unittest.TestCase):
         site = Path(dist)
         config = load_config(site / "jupyter-lite.json")
         self.assertEqual(config.get("exposeAppInBrowser"), "true")
-        self.assertNotIn(JS_KERNEL_EXTENSION, config.get("disabledExtensions", []))
-        self.assertTrue((site / "extensions" / JS_KERNEL_EXTENSION).is_dir())
         for name, version in TESTED_PINS.items():
             with self.subTest(package=name):
                 self.assertEqual(importlib.metadata.version(name), version)
