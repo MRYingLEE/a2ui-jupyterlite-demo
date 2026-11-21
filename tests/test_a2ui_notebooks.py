@@ -38,8 +38,8 @@ class Action:
         return ACTION
 
 
-def python_flow():
-    notebook = json.loads((CONTENT / "a2ui-test.ipynb").read_text())
+def python_flow(notebook_name):
+    notebook = json.loads((CONTENT / notebook_name).read_text())
     code = "".join(notebook["cells"][2]["source"])
     module = types.ModuleType("a2ui_jupyter")
     module.A2UISurface = Surface
@@ -51,7 +51,7 @@ def python_flow():
     with patch.dict(
         sys.modules, {"a2ui_jupyter": module, "IPython": ipython, "IPython.display": display}
     ):
-        exec(compile(code, "a2ui-test.ipynb", "exec"), namespace)
+        exec(compile(code, notebook_name, "exec"), namespace)
     surface = namespace["surface"]
     surface.handler(Action())
     return surface.batches, namespace["action_data"]
@@ -70,13 +70,19 @@ class PythonNotebookTest(unittest.TestCase):
                     )
 
     def test_python_form_and_callback(self):
-        python_batches, python_action = python_flow()
-        self.assertEqual(python_action, ACTION)
-        self.assertEqual(python_batches[-1][0]["updateDataModel"]["value"], "Submitted: Ada")
-        self.assertEqual(
-            python_batches[-1][1]["updateComponents"]["components"][0]["children"],
-            ["title", "status"],
-        )
+        for notebook_name in ("a2ui-test-pyodide.ipynb", "a2ui-test-xeus.ipynb"):
+            with self.subTest(notebook=notebook_name):
+                python_batches, python_action = python_flow(notebook_name)
+                self.assertEqual(python_action, ACTION)
+                self.assertEqual(python_batches[-1][0]["updateDataModel"]["value"], "Submitted: Ada")
+                self.assertEqual(
+                    python_batches[-1][1]["updateComponents"]["components"][0]["children"],
+                    ["title", "status"],
+                )
+
+    def test_xeus_notebook_selects_xeus_kernel(self):
+        notebook = json.loads((CONTENT / "a2ui-test-xeus.ipynb").read_text())
+        self.assertEqual(notebook["metadata"]["kernelspec"]["name"], "xpython")
 
 
 if __name__ == "__main__":

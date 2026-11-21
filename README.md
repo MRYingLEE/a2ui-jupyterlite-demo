@@ -17,20 +17,23 @@ JupyterLite requires a modern browser. See the
 [JupyterLite documentation](https://jupyterlite.readthedocs.io/) for browser
 requirements and deployment instructions.
 
-See [`requirements.txt`](requirements.txt) for the JupyterLite extensions and
-Pyodide packages and [`environment.yml`](environment.yml) for the xeus-python
-environment.
+See [`requirements.txt`](requirements.txt) for the JupyterLite extensions, the
+Pyodide packages, and the `jupyterlite-xeus` addon that builds the xeus-python
+kernel. The xeus-python environment is defined in
+[`environment.yml`](environment.yml); building it requires `micromamba` on
+`PATH`.
 
 ## A2UI Python test notebooks
 
-- [`content/a2ui-test.ipynb`](content/a2ui-test.ipynb) is the same form test
-  for Pyodide and xeus-python. Select the kernel before running it. If the
-  package is missing, the setup cell uses `piplite` in Pyodide; the xeus-python
-  environment is built with the package already installed. The form callback
-  replaces the form with a confirmation and stores the action for inspection
+- [`content/a2ui-test-pyodide.ipynb`](content/a2ui-test-pyodide.ipynb) is the
+  form test for the Pyodide kernel. Select Python (Pyodide) before running it.
+  If the package is missing, the setup cell uses `piplite`.
+- [`content/a2ui-test-xeus.ipynb`](content/a2ui-test-xeus.ipynb) is the same
+  form test for the xeus-python kernel (`xpython`, shown as Python (XPython)).
+  The xeus-python environment is built from [`environment.yml`](environment.yml)
+  with the package already installed. Both notebooks use the same callback: the
+  form is replaced with a confirmation and the action is stored for inspection
   in the last cell.
-- [`content/a2ui-test-xeus.ipynb`](content/a2ui-test-xeus.ipynb) points to the
-  shared Python test for existing links.
 
 The [GitHub Pages workflow](.github/workflows/deploy.yml) builds the Pyodide
 package index from `requirements.txt` and the xeus-python runtime from
