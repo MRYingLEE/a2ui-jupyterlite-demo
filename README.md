@@ -25,15 +25,16 @@ kernel. The xeus-python environment is defined in
 
 ## A2UI Python test notebooks
 
-- [`content/a2ui-test-pyodide.ipynb`](content/a2ui-test-pyodide.ipynb) is the
-  form test for the Pyodide kernel. Select Python (Pyodide) before running it.
-  If the package is missing, the setup cell uses `piplite`.
-- [`content/a2ui-test-xeus.ipynb`](content/a2ui-test-xeus.ipynb) is the same
-  form test for the xeus-python kernel (`xpython`, shown as Python (XPython)).
-  The xeus-python environment is built from [`environment.yml`](environment.yml)
-  with the package already installed. Both notebooks use the same callback: the
-  form is replaced with a confirmation and the action is stored for inspection
-  in the last cell.
+- [`content/smoke_test.ipynb`](content/smoke_test.ipynb) is the form test for
+  every kernel. Select Python (Pyodide) or Python (XPython) before running it.
+  Its setup cell sets `KERNEL` to the detected kernel. On Pyodide, the cell
+  installs the package with `piplite` when it is missing. On xeus-python, the
+  package must already be in the environment built from
+  [`environment.yml`](environment.yml).
+- `content/01_text_and_layout.ipynb` through `content/06_agent_function_call.ipynb`
+  are copies of the examples in the
+  [a2ui-jupyter package](https://github.com/MRYingLEE/a2ui-jupyter/tree/main/python/a2ui_jupyter/examples).
+  They use the same setup cell as the smoke test.
 
 The [GitHub Pages workflow](.github/workflows/deploy.yml) builds the Pyodide
 package index from `requirements.txt` and the xeus-python runtime from

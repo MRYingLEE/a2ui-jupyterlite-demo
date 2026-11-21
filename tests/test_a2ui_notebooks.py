@@ -1,5 +1,7 @@
 """Check the Python notebook flow and its deployed widget assets."""
 
+import ast
+import asyncio
 import json
 import sys
 import types
@@ -9,6 +11,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 CONTENT = Path(__file__).resolve().parents[1] / "content"
+NOTEBOOKS = sorted(CONTENT.glob("[0-9][0-9]_*.ipynb")) + [CONTENT / "smoke_test.ipynb"]
+
 ACTION = {
     "version": "1.0",
     "action": {
@@ -40,7 +44,6 @@ class Action:
 
 def python_flow(notebook_name):
     notebook = json.loads((CONTENT / notebook_name).read_text())
-    code = "".join(notebook["cells"][2]["source"])
     module = types.ModuleType("a2ui_jupyter")
     module.A2UISurface = Surface
     display = types.ModuleType("IPython.display")
@@ -51,7 +54,16 @@ def python_flow(notebook_name):
     with patch.dict(
         sys.modules, {"a2ui_jupyter": module, "IPython": ipython, "IPython.display": display}
     ):
-        exec(compile(code, notebook_name, "exec"), namespace)
+        for cell in notebook["cells"][1:3]:
+            code = compile(
+                "".join(cell["source"]),
+                notebook_name,
+                "exec",
+                flags=ast.PyCF_ALLOW_TOP_LEVEL_AWAIT,
+            )
+            result = eval(code, namespace)
+            if asyncio.iscoroutine(result):
+                asyncio.run(result)
     surface = namespace["surface"]
     surface.handler(Action())
     return surface.batches, namespace["action_data"]
@@ -70,19 +82,20 @@ class PythonNotebookTest(unittest.TestCase):
                     )
 
     def test_python_form_and_callback(self):
-        for notebook_name in ("a2ui-test-pyodide.ipynb", "a2ui-test-xeus.ipynb"):
-            with self.subTest(notebook=notebook_name):
-                python_batches, python_action = python_flow(notebook_name)
-                self.assertEqual(python_action, ACTION)
-                self.assertEqual(python_batches[-1][0]["updateDataModel"]["value"], "Submitted: Ada")
-                self.assertEqual(
-                    python_batches[-1][1]["updateComponents"]["components"][0]["children"],
-                    ["title", "status"],
-                )
+        python_batches, python_action = python_flow("smoke_test.ipynb")
+        self.assertEqual(python_action, ACTION)
+        self.assertEqual(python_batches[-1][0]["updateDataModel"]["value"], "Submitted: Ada")
+        self.assertEqual(
+            python_batches[-1][1]["updateComponents"]["components"][0]["children"],
+            ["title", "status"],
+        )
 
-    def test_xeus_notebook_selects_xeus_kernel(self):
-        notebook = json.loads((CONTENT / "a2ui-test-xeus.ipynb").read_text())
-        self.assertEqual(notebook["metadata"]["kernelspec"]["name"], "xpython")
+    def test_notebooks_share_the_setup_cell(self):
+        setup_cells = {
+            path.name: "".join(json.loads(path.read_text())["cells"][1]["source"])
+            for path in NOTEBOOKS
+        }
+        self.assertEqual(len(set(setup_cells.values())), 1, setup_cells.keys())
 
 
 if __name__ == "__main__":
