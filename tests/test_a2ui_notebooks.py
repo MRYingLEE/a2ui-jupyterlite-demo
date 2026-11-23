@@ -70,8 +70,8 @@ def python_flow(notebook_name):
     return surface.batches, namespace["action_data"]
 
 
-def javascript_flow():
-    notebook = json.loads((CONTENT / "a2ui-js-form-submit.ipynb").read_text())
+def javascript_flow(notebook_name: str, iframe: bool = True):
+    notebook = json.loads((CONTENT / notebook_name).read_text())
     code = "".join(notebook["cells"][1]["source"])
     script = """
 const vm = require('node:vm');
@@ -81,17 +81,38 @@ class Surface {
   send(messages) { this.batches.push(Array.isArray(messages) ? messages : [messages]); }
   onAction(handler) { this.handler = handler; }
 }
-const context = {A2UISurface: Surface, display: () => {}};
+const site = 'https://example.test/a2ui-jupyterlite-demo/';
+const context = {
+  URL,
+  display: () => {},
+  importAdapter: async url => {
+    if (url !== `${site}files/a2ui/kernel.js`) throw new Error(`Wrong adapter URL: ${url}`);
+    return {A2UISurface: Surface};
+  },
+};
+if (input.iframe) {
+  context.document = {baseURI: `${site}lab/index.html`};
+} else {
+  context.location = {
+    href: `${site}extensions/@jupyterlite/javascript-kernel-extension/static/worker.js`,
+  };
+}
 vm.createContext(context);
-const code = input.code.replace(/^const \\{ A2UISurface \\} = await import\\([^\\n]+\\);\\n/, '');
-if (code === input.code) throw new Error('JavaScript adapter import was not found');
-vm.runInContext(code, context);
-context.surface.handler(input.action);
-console.log(JSON.stringify({batches: context.surface.batches, action: context.actionData}));
+const code = input.code.replace('await import(', 'await importAdapter(');
+vm.runInContext(`(async () => {\\n${code}\\n})()`, context).then(() => {
+  context.surface?.handler?.(input.action);
+  console.log(JSON.stringify({
+    batches: context.surface?.batches ?? [],
+    action: context.actionData ?? null,
+  }));
+}).catch(error => {
+  console.error(error);
+  process.exitCode = 1;
+});
 """
     result = subprocess.run(
         ["node", "-e", script],
-        input=json.dumps({"code": code, "action": ACTION}),
+        input=json.dumps({"code": code, "action": ACTION, "iframe": iframe}),
         text=True,
         capture_output=True,
         check=True,
@@ -114,7 +135,7 @@ class NotebookParityTest(unittest.TestCase):
 
     def test_python_and_javascript_form_and_callback_match(self):
         python_batches, python_action = python_flow("smoke_test.ipynb")
-        javascript_batches, javascript_action = javascript_flow()
+        javascript_batches, javascript_action = javascript_flow("a2ui-js-form-submit.ipynb")
         self.assertEqual(python_action, ACTION)
         self.assertEqual(javascript_action, ACTION)
         # Batch boundaries differ between the notebooks, so compare the message sequence.
@@ -126,6 +147,12 @@ class NotebookParityTest(unittest.TestCase):
             python_messages[-1]["updateComponents"]["components"][0]["children"],
             ["title", "status"],
         )
+
+    def test_javascript_smoke_notebooks_load_adapter_under_site_prefix(self):
+        for notebook in ("a2ui-js-form-submit.ipynb", "a2ui-js-kernel-smoke.ipynb"):
+            for iframe in (True, False):
+                with self.subTest(notebook=notebook, iframe=iframe):
+                    javascript_flow(notebook, iframe)
 
     def test_notebooks_share_the_setup_cell(self):
         setup_cells = {

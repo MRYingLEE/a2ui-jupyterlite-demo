@@ -5,8 +5,8 @@ renderer with Pyodide, xeus-python, and JavaScript kernels. It is based on
 the [JupyterLite demo](https://github.com/jupyterlite/demo).
 
 The renderer and reusable examples live in
-[`typescript/renderers/jupyter`](https://github.com/MRYingLEE/a2ui-jupyter/tree/main/typescript/renderers/jupyter)
-and [`python/a2ui_jupyter`](https://github.com/MRYingLEE/a2ui-jupyter/tree/main/python/a2ui_jupyter)
+[`typescript/renderers/jupyter`](https://github.com/MRYingLEE/a2ui/tree/jupyter-js-kernel/typescript/renderers/jupyter)
+and [`python/a2ui_jupyter`](https://github.com/MRYingLEE/a2ui/tree/jupyter-python-kernel/python/a2ui_jupyter)
 in the A2UI source checkout. This repository owns the site configuration and
 kernel-specific smoke tests.
 
@@ -35,16 +35,17 @@ kernel. The xeus-python environment is defined in
   [a2ui-jupyter package](https://github.com/MRYingLEE/a2ui-jupyter/tree/main/python/a2ui_jupyter/examples).
   They use the same setup cell as the smoke test.
 - [`content/a2ui-js-form-submit.ipynb`](content/a2ui-js-form-submit.ipynb)
-  tests the same form and callback with the JavaScript kernel. Its adapter URL
-  starts at `/files/`; adjust it to include the site base path when deploying
-  under a URL prefix.
+  tests the same form and callback with the JavaScript kernel. It resolves the
+  adapter relative to the site, including on GitHub Pages project sites.
 - [`content/javascript.ipynb`](content/javascript.ipynb) continues to exercise the JavaScript kernel.
 
 The [GitHub Pages workflow](.github/workflows/deploy.yml) builds the Pyodide
 package index from `requirements.txt` and the xeus-python runtime from
 [`environment.yml`](environment.yml). [jupyter-lite.json](jupyter-lite.json)
-pins Pyodide to 0.29.3 to match the local `rpds-py` wheel. The workflow deploys
-pushes to `main`; other branches run the build without deploying. Do not set
+pins Pyodide to 0.29.3 to match the local `rpds-py` wheel. The workflow builds
+pushes to `main` and `jupyter-js-kernel` and pull requests. Only `main`
+deploys to Pages; download the workflow's build artifact or build locally to
+try the JavaScript branch. Do not set
 `baseUrl` in [jupyter-lite.json](jupyter-lite.json): the root page compares it
 with its own path to redirect to `/lab/`, and an override such as `../` breaks
 that redirect.
