@@ -56,6 +56,14 @@ suspends the kernel and runs the next queued cell before the current cell
 finishes, which showed up as `NameError` when the setup and surface cells were
 run back to back.
 
+In the current build the kernel metadata does not list the mount tarballs, so
+after `jupyter lite build` run
+`python scripts/register_xeus_mounts.py dist/xeus/xeus-kernel`. It records any
+`kernel_packages/mount_N.tar.gz` file missing from `empack_env_meta.json`; without
+it the `rpds` package and the preload file are absent and the setup cell fails
+with `ModuleNotFoundError: No module named 'rpds'`. The workflow runs this step
+after the build, and it is safe to run more than once.
+
 The wheel in [`wheels/`](wheels) and the JavaScript files in
 [`content/a2ui/`](content/a2ui) are deployment inputs. When testing a renderer
 change, rebuild and replace both from the same A2UI revision; changing the

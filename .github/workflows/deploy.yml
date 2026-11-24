@@ -35,6 +35,7 @@ jobs:
             --XeusAddon.mounts=build/runtime-wheels/rpds-py/rpds:/lib/python3.13/site-packages/rpds \
             --XeusAddon.mounts=build/runtime-wheels/rpds-py/rpds_py-0.30.0.dist-info:/lib/python3.13/site-packages/rpds_py-0.30.0.dist-info \
             --XeusAddon.mounts=startup/a2ui_preload.pth:/lib/python3.13/site-packages
+          python scripts/register_xeus_mounts.py dist/xeus/xeus-kernel
       - name: Check Pages preconditions
         env:
           PAGES_DIST: dist
